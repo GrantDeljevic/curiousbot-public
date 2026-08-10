@@ -8,10 +8,9 @@ import os
 
 from bot_config import google_client
 
-async def run_activity(interaction):
+async def run_activity(interaction, channel_data):
     try:
-        testmessage = interaction.context.message.attachments[0]
-        await testmessage.save('channeldata.csv')
+        await channel_data.save('channeldata.csv')
     except:
         await interaction.response.send_message("Please make sure you are attaching the channel list CSV."
         "(This is in testing. If you are having issues attaching a CSV to the command please reach out to Beats)",ephemeral=True)
