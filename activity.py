@@ -4,27 +4,32 @@ import pandas as pd
 import pygsheets
 import numpy as np
 from datetime import date
-import os
+from io import BytesIO
 
 from bot_config import google_client
 
+
+async def read_channel_data(channel_data):
+    payload = await channel_data.read()
+    return pd.read_csv(
+        BytesIO(payload),
+        sep=',',
+        usecols=['channel_name', 'readers', 'chatters', 'messages'],
+    )
+
+
 async def run_activity(interaction, channel_data):
     try:
-        await channel_data.save('channeldata.csv')
+        channels_csv = await read_channel_data(channel_data)
     except:
         await interaction.response.send_message("Please make sure you are attaching the channel list CSV."
         "(This is in testing. If you are having issues attaching a CSV to the command please reach out to Beats)",ephemeral=True)
         return False
-    channels_csv = pd.read_csv('channeldata.csv',sep=',',usecols=['channel_name','readers','chatters','messages'])
     authorchannels = []
     for i in channels_csv['channel_name']:
         if '【' in str(i) and '🏛' not in str(i):
             authorchannels.append(i)
     authors_df = channels_csv.loc[channels_csv['channel_name'].isin(authorchannels)]
-    try:
-        os.remove('channeldata.csv')
-    except:
-        print("Failed to delete channeldata.csv")
     scores = []
     for i in authors_df.iloc:
         try:
