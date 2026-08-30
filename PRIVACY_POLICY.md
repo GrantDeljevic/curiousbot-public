@@ -1,6 +1,6 @@
 # Curiousbot Privacy Policy
 
-**Effective date:** August 29, 2026
+**Effective date:** August 30, 2026
 
 This Privacy Policy describes how Curiousbot ("Curiousbot," "the bot," "we," or "us") handles information when it is used in a Discord server. Curiousbot provides community-management and other server features for participating Discord communities.
 
@@ -52,3 +52,4 @@ We may update this Privacy Policy when Curiousbot's features or information prac
 ## Contact
 
 For privacy questions, deletion requests, opt-out requests, or security concerns, contact the developer `.grant` directly on Discord (user ID `282599041244594176`) or contact management staff in the relevant participating server's support channels.
+
