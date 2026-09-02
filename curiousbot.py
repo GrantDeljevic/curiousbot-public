@@ -57,11 +57,6 @@ COUNCIL_ADMIN_ROLE_ID = env_int("COUNCIL_ADMIN_ROLE_ID")
 MANAGEMENT_ROLE_ID = env_int("MANAGEMENT_ROLE_ID")
 CHAIRMAN_ROLE_ID = env_int("CHAIRMAN_ROLE_ID")
 CONFIRMATION_CHANNEL_IDS = set(env_ints("CONFIRMATION_CHANNEL_IDS"))
-FIC_PROMO_SOURCE_AUTHOR_ID = env_int("FIC_PROMO_SOURCE_AUTHOR_ID")
-FIC_PROMO_SOURCE_CHANNEL_ID = env_int("FIC_PROMO_SOURCE_CHANNEL_ID")
-FIC_PROMO_TARGET_CHANNEL_ID = env_int("FIC_PROMO_TARGET_CHANNEL_ID")
-FIC_PROMO_REQUIRED_DOMAINS = ("fanfiction.net", "archiveofourown.org", "patreon.com")
-FIC_PROMO_ROLE_IDS = env_ints("FIC_PROMO_ROLE_IDS")
 BIWEEKLY_AUTHORIZED_USERS = set(env_ints("BIWEEKLY_AUTHORIZED_USER_IDS", [OWNER_USER_ID] if OWNER_USER_ID else []))
 BIWEEKLY_ALLOWED_CHANNELS = set(env_ints("BIWEEKLY_ALLOWED_CHANNEL_IDS"))
 BIWEEKLY_ALLOWED_ROLE_IDS = set(env_ints("BIWEEKLY_ALLOWED_ROLE_IDS"))
@@ -170,51 +165,6 @@ def can_run_biweekly(member, channel_id):
     if channel_id in BIWEEKLY_ALLOWED_CHANNELS:
         return True
     return has_any_role(member, BIWEEKLY_ALLOWED_ROLE_IDS)
-
-
-def should_repost_fic_promo_message(message):
-    if message.author.id != FIC_PROMO_SOURCE_AUTHOR_ID:
-        return False
-    if message.channel.id != FIC_PROMO_SOURCE_CHANNEL_ID:
-        return False
-
-    content = message.content.lower()
-    return all(domain in content for domain in FIC_PROMO_REQUIRED_DOMAINS)
-
-
-def fic_promo_allowed_mentions():
-    return discord.AllowedMentions(
-        everyone=False,
-        users=False,
-        roles=[discord.Object(id=role_id) for role_id in FIC_PROMO_ROLE_IDS],
-        replied_user=False,
-    )
-
-
-async def repost_fic_promo_message(message):
-    target_channel = bot.get_channel(FIC_PROMO_TARGET_CHANNEL_ID)
-    if target_channel is None:
-        target_channel = await bot.fetch_channel(FIC_PROMO_TARGET_CHANNEL_ID)
-
-    role_mentions = " ".join(f"<@&{role_id}>" for role_id in FIC_PROMO_ROLE_IDS)
-    repost_content = f"{role_mentions}\n{message.content}"
-    allowed_mentions = fic_promo_allowed_mentions()
-
-    if len(repost_content) <= 2000:
-        await target_channel.send(repost_content, allowed_mentions=allowed_mentions)
-        return
-
-    first_chunk_size = 2000 - len(role_mentions) - 1
-    await target_channel.send(
-        f"{role_mentions}\n{message.content[:first_chunk_size]}",
-        allowed_mentions=allowed_mentions,
-    )
-
-    for start in range(first_chunk_size, len(message.content), 2000):
-        await target_channel.send(
-            message.content[start:start + 2000],
-            allowed_mentions=discord.AllowedMentions.none(),
-        )
 
 
 def sheet(dockey,sheet):
@@ -605,15 +555,6 @@ async def on_user_update(before,after):
 
 @bot.event
 async def on_message(message):
-    try:
-        if should_repost_fic_promo_message(message):
-            await repost_fic_promo_message(message)
-    except Exception:
-        print(f"handled in fic promo repost: {traceback.format_exc()}")
-        beats = owner_user()
-        if beats is not None:
-            await beats.send(f"Something has gone wrong with the fic promo repost:\n{traceback.format_exc()}")
-
     try:
         if message.webhook_id is not None:
             if message.webhook_id in AUTHOR_WEBHOOK_IDS:
