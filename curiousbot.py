@@ -15,14 +15,21 @@ import re
 
 from bot_config import env_int, env_ints, env_strings, google_client, require_env
 
-intents = discord.Intents.default()
-intents.members = True
-intents.message_content = True
+def build_intents() -> discord.Intents:
+    intents = discord.Intents.none()
+    intents.guilds = True
+    intents.members = True
+    intents.guild_messages = True
+    intents.guild_reactions = True
+    intents.message_content = True
+    return intents
+
+
 bot_kwargs = {}
 application_id = env_int("CURIOUSBOT_APPLICATION_ID")
 if application_id is not None:
     bot_kwargs["application_id"] = application_id
-bot = commands.Bot("`",intents=intents,help_command=None,**bot_kwargs)
+bot = commands.Bot("`",intents=build_intents(),help_command=None,**bot_kwargs)
 run_weekly = False
 scheduler = AsyncIOScheduler()
 warnings.filterwarnings('ignore','.*PytzU*.')
@@ -276,10 +283,11 @@ async def index(interaction: Interaction):
 
 @bot.tree.command(
         name="activity",
-        description="Runs the activity command. Only works in the operations channel or EL council leadership channels.",
-        **guild_command_kwargs(EL_GUILD_ID)
+        description="Runs the activity command. Only works in the operations channel or EL council leadership channels."
 )
-async def activity(interaction: Interaction):
+@configured_guilds(EL_GUILD_ID, TESTING_GUILD_ID)
+@app_commands.describe(channel_data="The channel list CSV export to process.")
+async def activity(interaction: Interaction, channel_data: discord.Attachment):
     import activity as actfile
 
     if interaction.guild_id == EL_GUILD_ID:
@@ -288,11 +296,11 @@ async def activity(interaction: Interaction):
         management = EL.get_role(MANAGEMENT_ROLE_ID) if MANAGEMENT_ROLE_ID else None
         chairman = EL.get_role(CHAIRMAN_ROLE_ID) if CHAIRMAN_ROLE_ID else None
         if management in interaction.user.roles or council_administrator in interaction.user.roles or chairman in interaction.user.roles:
-            await actfile.run_activity(interaction)
+            await actfile.run_activity(interaction, channel_data)
         else:
             await interaction.response.send_message("You cannot use that command. Please contact a member of management or council leadership.",ephemeral=True)
     elif interaction.guild_id == TESTING_GUILD_ID:
-        await actfile.run_activity(interaction)
+        await actfile.run_activity(interaction, channel_data)
     else:
         await interaction.response.send_message("You cannot use that command in this discord.",ephemeral=True)
 
