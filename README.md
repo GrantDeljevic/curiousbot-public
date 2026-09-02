@@ -15,7 +15,6 @@ source values.
 - `/biweekly` author score updater backed by Google Sheets.
 - `/index`, `autoindex`, and rank update helpers for author-list operations.
 - Registry webhook parsing for author/editor/applicant/playtester workflows.
-- Fic promo repost routing with controlled Discord mentions.
 - Legacy Parke rent watcher with scheduled and manual runs.
 - Focused unit coverage for biweekly row alignment, AO3 handling, and Legacy
   Parke watcher behavior.
@@ -93,7 +92,6 @@ Important examples:
 - `BIWEEKLY_ALLOWED_CHANNEL_IDS`
 - `BIWEEKLY_ALLOWED_ROLE_IDS`
 - `AUTHOR_WEBHOOK_IDS`
-- `FIC_PROMO_ROLE_IDS`
 
 See `.env.example` for the complete list.
 
